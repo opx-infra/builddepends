@@ -49,57 +49,58 @@ func DependencyGraph(controls map[string]*control.Control) (string, error) {
 
 // ParseControls returns the Control struct for each directory
 func ParseControls(dirs []string) (map[string]*control.Control, error) {
-	m := make(map[string]*control.Control)
+	cs := make(map[string]*control.Control)
 
-	for _, d := range dirs {
-		c, err := control.ParseControlFile(fmt.Sprintf("%s/debian/control", d))
+	for _, dir := range dirs {
+		con, err := control.ParseControlFile(fmt.Sprintf("%s/debian/control", dir))
 		if err != nil {
-			return m, err
+			return cs, err
 		}
-		m[d] = c
+		cs[dir] = con
 	}
 
-	return m, nil
+	return cs, nil
 }
 
 // Locals /////////////////////////////////////////////////////////////////////
 
 // binPkgToDirectory returns a lookup map for binary package to directory translation
 func binPkgToDirectory(controls map[string]*control.Control) map[string]string {
-	m := make(map[string]string)
+	lookup := make(map[string]string)
 
-	for d, c := range controls {
-		for _, bin := range c.Binaries {
-			m[bin.Package] = d
+	for dir, con := range controls {
+		for _, bin := range con.Binaries {
+			lookup[bin.Package] = dir
 		}
 	}
 
-	return m
+	return lookup
 }
 
 func graph(controls map[string]*control.Control, reverse bool) (string, error) {
 	lines := make(map[string]bool)
 	lookup := binPkgToDirectory(controls)
 
-	for d, c := range controls {
-		storeLine(node(d), lines)
-		for _, dep := range strings.Split(c.Source.BuildDepends.String(), ", ") {
+	// Process nodes and edges
+	for dir, con := range controls {
+		storeLine(node(dir), lines)
+		for _, dep := range strings.Split(con.Source.BuildDepends.String(), ", ") {
 			bareDep := strings.Split(dep, " ")[0]
 			buildDir, available := lookup[bareDep]
 			if available {
 				storeLine(node(buildDir), lines)
 				if reverse {
-					storeLine(edge(buildDir, d), lines)
+					storeLine(edge(buildDir, dir), lines)
 				} else {
-					storeLine(edge(d, buildDir), lines)
+					storeLine(edge(dir, buildDir), lines)
 				}
 			}
 		}
 	}
 
+	// Sort nodes and edges
 	var nodes []string
 	var edges []string
-
 	for line := range lines {
 		if strings.Contains(line, "->") {
 			edges = append(edges, line)
@@ -110,19 +111,17 @@ func graph(controls map[string]*control.Control, reverse bool) (string, error) {
 	sort.Strings(nodes)
 	sort.Strings(edges)
 
-	var b strings.Builder
-	b.WriteString("strict digraph \"builddepends\" {\n")
-
-	for _, node := range nodes {
-		b.WriteString(node)
+	// Write graph
+	var bob strings.Builder
+	bob.WriteString("strict digraph \"builddepends\" {\n")
+	for _, n := range nodes {
+		bob.WriteString(n)
 	}
-
-	for _, edges := range edges {
-		b.WriteString(edges)
+	for _, e := range edges {
+		bob.WriteString(e)
 	}
-
-	b.WriteString("}\n")
-	return b.String(), nil
+	bob.WriteString("}\n")
+	return bob.String(), nil
 }
 
 func edge(from, to string) string {

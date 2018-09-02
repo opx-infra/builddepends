@@ -12,8 +12,8 @@ import (
 // Exported ///////////////////////////////////////////////////////////////////
 
 // BuildGraph returns the DOT graph for a distributable build order
-func BuildGraph(controls map[string]*control.Control) (string, error) {
-	return graph(controls, true)
+func BuildGraph(controls map[string]*control.Control, sorted bool) (string, error) {
+	return graph(controls, true, sorted)
 }
 
 // DebianDirectories returns all directories with debian/control files
@@ -43,8 +43,8 @@ func DebianDirectories(files []os.FileInfo) ([]string, error) {
 }
 
 // DependencyGraph returns the DOT graph for the build dependencies locally available
-func DependencyGraph(controls map[string]*control.Control) (string, error) {
-	return graph(controls, false)
+func DependencyGraph(controls map[string]*control.Control, sorted bool) (string, error) {
+	return graph(controls, false, sorted)
 }
 
 // ParseControls returns the Control struct for each directory
@@ -77,7 +77,7 @@ func binPkgToDirectory(controls map[string]*control.Control) map[string]string {
 	return lookup
 }
 
-func graph(controls map[string]*control.Control, reverse bool) (string, error) {
+func graph(controls map[string]*control.Control, reverse bool, sorted bool) (string, error) {
 	lines := make(map[string]bool)
 	lookup := binPkgToDirectory(controls)
 
@@ -98,28 +98,34 @@ func graph(controls map[string]*control.Control, reverse bool) (string, error) {
 		}
 	}
 
-	// Sort nodes and edges
-	var nodes []string
-	var edges []string
-	for line := range lines {
-		if strings.Contains(line, "->") {
-			edges = append(edges, line)
-		} else {
-			nodes = append(nodes, line)
-		}
-	}
-	sort.Strings(nodes)
-	sort.Strings(edges)
-
-	// Write graph
 	var bob strings.Builder
 	bob.WriteString("strict digraph \"builddepends\" {\n")
-	for _, n := range nodes {
-		bob.WriteString(n)
+
+	if sorted {
+		var nodes []string
+		var edges []string
+		for line := range lines {
+			if strings.Contains(line, "->") {
+				edges = append(edges, line)
+			} else {
+				nodes = append(nodes, line)
+			}
+		}
+		sort.Strings(nodes)
+		sort.Strings(edges)
+
+		for _, n := range nodes {
+			bob.WriteString(n)
+		}
+		for _, e := range edges {
+			bob.WriteString(e)
+		}
+	} else {
+		for line := range lines {
+			bob.WriteString(line)
+		}
 	}
-	for _, e := range edges {
-		bob.WriteString(e)
-	}
+
 	bob.WriteString("}\n")
 	return bob.String(), nil
 }

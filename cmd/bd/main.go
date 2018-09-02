@@ -10,7 +10,7 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-const version = "0.1.1"
+const version = "0.2.0"
 
 func main() {
 	flag.Usage = func() {
@@ -59,9 +59,9 @@ func main() {
 
 	var graph string
 	if *reverseGraph {
-		graph, err = builddepends.BuildGraph(controls)
+		graph, err = builddepends.BuildGraph(controls, true)
 	} else {
-		graph, err = builddepends.DependencyGraph(controls)
+		graph, err = builddepends.DependencyGraph(controls, true)
 	}
 	if err != nil {
 		log.Fatal(err)

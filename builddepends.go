@@ -99,7 +99,11 @@ func graph(controls map[string]*control.Control, reverse bool, sorted bool) (str
 	}
 
 	var bob strings.Builder
-	bob.WriteString("strict digraph \"builddepends\" {\n")
+	if reverse {
+		bob.WriteString("strict digraph \"buildorder\" {\n")
+	} else {
+		bob.WriteString("strict digraph \"builddepends\" {\n")
+	}
 
 	if sorted {
 		var nodes []string

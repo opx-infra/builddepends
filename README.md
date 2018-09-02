@@ -9,7 +9,7 @@ Generates build dependency graphs for Debian control files. Includes a cli progr
 ### Installation
 
 ```bash
-go get -u github.com/opx-infra/builddepends
+$ go get -u github.com/opx-infra/builddepends
 ```
 
 ### Usage
@@ -38,8 +38,8 @@ func main() {
 ### Installation
 
 ```bash
-curl -sLo bd https://github.com/opx-infra/builddepends/releases/download/v0.1.0/bd-linux-amd64
-chmod +x bd
+$ curl -sLo bd https://github.com/opx-infra/builddepends/releases/download/v0.1.0/bd-linux-amd64
+$ chmod +x bd
 ```
 
 ### Usage
@@ -54,7 +54,7 @@ $ for r in opx-nas-acl opx-nas-daemon opx-alarm opx-logging opx-common-utils; do
   done
 
 $ bd
-strict digraph "" {
+strict digraph "builddepends" {
 "opx-alarm";
 "opx-common-utils";
 "opx-logging";
@@ -78,11 +78,11 @@ $ time controlgraph --graph >/dev/null
 
 real	0m0.483s
 user	0m0.364s
-sys	0m0.102s
+sys 	0m0.102s
 
 $ time bd >/dev/null
 
 real	0m0.009s
 user	0m0.004s
-sys	0m0.004s
+sys 	0m0.004s
 ```

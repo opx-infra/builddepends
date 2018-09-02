@@ -64,11 +64,6 @@ func ParseControls(dirs []string) (map[string]*control.Control, error) {
 
 // Locals /////////////////////////////////////////////////////////////////////
 
-const (
-	digraphStart = "strict digraph \"\" {\n"
-	digraphEnd   = "}"
-)
-
 // binPkgToDirectory returns a lookup map for binary package to directory translation
 func binPkgToDirectory(controls map[string]*control.Control) map[string]string {
 	m := make(map[string]string)
@@ -116,7 +111,7 @@ func graph(controls map[string]*control.Control, reverse bool) (string, error) {
 	sort.Strings(edges)
 
 	var b strings.Builder
-	b.WriteString(digraphStart)
+	b.WriteString("strict digraph \"builddepends\" {\n")
 
 	for _, node := range nodes {
 		b.WriteString(node)
@@ -126,7 +121,7 @@ func graph(controls map[string]*control.Control, reverse bool) (string, error) {
 		b.WriteString(edges)
 	}
 
-	b.WriteString(digraphEnd)
+	b.WriteString("}\n")
 	return b.String(), nil
 }
 
